@@ -31,6 +31,8 @@ import {
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
 import { format } from 'date-fns'
 
+import { TransactionDialog } from '@/components/transaction-dialog'
+
 type Transaction = {
   id: string
   amount: number
@@ -45,6 +47,7 @@ export function TransactionTable() {
   const supabase = createClient()
   const queryClient = useQueryClient()
   const [sorting, setSorting] = useState<SortingState>([])
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
 
   const { data: transactions } = useQuery({
     queryKey: ['transactions'],
@@ -134,6 +137,9 @@ export function TransactionTable() {
               >
                 Copy ID
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setEditingTransaction(transaction)}>
+                Edit
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => deleteTransaction.mutate(transaction.id)}>
                 Delete
               </DropdownMenuItem>
@@ -157,7 +163,13 @@ export function TransactionTable() {
   })
 
   return (
-    <div className="rounded-md border">
+    <>
+      <TransactionDialog 
+        open={!!editingTransaction} 
+        onOpenChange={(open) => !open && setEditingTransaction(null)}
+        transaction={editingTransaction}
+      />
+      <div className="rounded-md border">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -219,5 +231,6 @@ export function TransactionTable() {
         </Button>
       </div>
     </div>
+    </>
   )
 }
