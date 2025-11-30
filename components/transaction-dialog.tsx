@@ -51,11 +51,12 @@ interface TransactionDialogProps {
   transaction?: any // If provided, we are in edit mode
   trigger?: React.ReactNode
   defaultType?: 'income' | 'expense'
+  defaultStatus?: 'cleared' | 'pending' | 'estimated'
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
 
-export function TransactionDialog({ transaction, trigger, defaultType = 'expense', open: controlledOpen, onOpenChange: setControlledOpen }: TransactionDialogProps) {
+export function TransactionDialog({ transaction, trigger, defaultType = 'expense', defaultStatus = 'cleared', open: controlledOpen, onOpenChange: setControlledOpen }: TransactionDialogProps) {
   const [open, setOpen] = useState(false)
   const supabase = createClient()
   const queryClient = useQueryClient()
@@ -72,7 +73,7 @@ export function TransactionDialog({ transaction, trigger, defaultType = 'expense
       description: transaction?.description || '',
       category: transaction?.category || '',
       type: transaction?.type || defaultType,
-      status: transaction?.status || 'cleared',
+      status: transaction?.status || defaultStatus,
     },
   })
 
@@ -85,10 +86,10 @@ export function TransactionDialog({ transaction, trigger, defaultType = 'expense
             description: transaction?.description || '',
             category: transaction?.category || '',
             type: transaction?.type || defaultType,
-            status: transaction?.status || 'cleared',
+            status: transaction?.status || defaultStatus,
         })
     }
-  }, [transaction, isOpen, form, defaultType])
+  }, [transaction, isOpen, form, defaultType, defaultStatus])
 
   const onSubmit = async (values: TransactionFormValues) => {
     const { data: { user } } = await supabase.auth.getUser()
