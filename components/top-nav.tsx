@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Calendar, CreditCard, LogOut, Settings, Receipt } from 'lucide-react'
+import { LayoutDashboard, Calendar, CreditCard, LogOut, Settings, Receipt, Plus } from 'lucide-react'
+import { TransactionDialog } from '@/components/transaction-dialog'
 
 export function TopNav() {
   const pathname = usePathname()
@@ -27,7 +28,7 @@ export function TopNav() {
     {
       title: 'Income',
       href: '/dashboard/income',
-      icon: CreditCard, // Reusing icon for now, could import TrendingUp or similar
+      icon: CreditCard,
     },
     {
       title: 'Bills',
@@ -50,6 +51,16 @@ export function TopNav() {
       icon: Settings,
     },
   ]
+
+  const getDefaultType = () => {
+    if (pathname.includes('/income')) return 'income'
+    return 'expense'
+  }
+
+  const getDefaultStatus = () => {
+    if (pathname.includes('/bills')) return 'pending'
+    return 'cleared'
+  }
 
   return (
     <nav className="border-b bg-card">
@@ -94,6 +105,16 @@ export function TopNav() {
         </div>
 
         <div className="ml-auto flex items-center space-x-4">
+          <TransactionDialog 
+            defaultType={getDefaultType()}
+            defaultStatus={getDefaultStatus()}
+            trigger={
+                <Button size="sm" className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Add</span>
+                </Button>
+            }
+          />
           <Button variant="ghost" size="icon" onClick={handleLogout}>
             <LogOut className="h-5 w-5" />
             <span className="sr-only">Log out</span>

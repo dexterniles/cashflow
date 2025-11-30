@@ -34,14 +34,6 @@ export default function BillsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Bills</h1>
-        <TransactionDialog 
-            defaultType="expense"
-            trigger={
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" /> Add Bill
-                </Button>
-            }
-        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
