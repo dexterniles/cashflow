@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Calendar, CreditCard, LogOut, Settings } from 'lucide-react'
+import { LayoutDashboard, Calendar, CreditCard, LogOut, Settings, Receipt } from 'lucide-react'
 
 export function TopNav() {
   const pathname = usePathname()
@@ -25,14 +25,24 @@ export function TopNav() {
       icon: LayoutDashboard,
     },
     {
-      title: 'Calendar',
-      href: '/dashboard/calendar',
-      icon: Calendar,
+      title: 'Income',
+      href: '/dashboard/income',
+      icon: CreditCard, // Reusing icon for now, could import TrendingUp or similar
+    },
+    {
+      title: 'Bills',
+      href: '/dashboard/bills',
+      icon: Receipt,
     },
     {
       title: 'Transactions',
       href: '/dashboard/transactions',
       icon: CreditCard,
+    },
+    {
+      title: 'Calendar',
+      href: '/dashboard/calendar',
+      icon: Calendar,
     },
     {
       title: 'Settings',

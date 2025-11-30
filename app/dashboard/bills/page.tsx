@@ -1,0 +1,66 @@
+'use client'
+
+import { TransactionTable } from '@/components/transaction-table'
+import { TransactionDialog } from '@/components/transaction-dialog'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useQuery } from '@tanstack/react-query'
+import { createClient } from '@/utils/supabase/client'
+
+export default function BillsPage() {
+  const supabase = createClient()
+
+  const { data: billsDue } = useQuery({
+    queryKey: ['bills_due'],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Get next payday to calculate bills due before then? 
+      // Or just total pending bills? Let's do total pending bills for now as a simple metric.
+      
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('type', 'expense')
+        .neq('status', 'cleared')
+      
+      if (error) throw error
+      return data.reduce((acc, t) => acc + Number(t.amount), 0)
+    }
+  })
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Bills</h1>
+        <TransactionDialog 
+            defaultType="expense"
+            trigger={
+                <Button className="gap-2">
+                    <Plus className="h-4 w-4" /> Add Bill
+                </Button>
+            }
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+            <CardHeader>
+            <CardTitle>Total Bills Due</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(billsDue || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+                Total pending and estimated expenses
+            </p>
+            </CardContent>
+        </Card>
+      </div>
+
+      <TransactionTable type="expense" excludeStatus="cleared" />
+    </div>
+  )
+}

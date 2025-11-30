@@ -9,7 +9,7 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
+        <h1 className="text-3xl font-bold tracking-tight">All Transactions</h1>
         <TransactionDialog 
             trigger={
                 <Button className="gap-2">
