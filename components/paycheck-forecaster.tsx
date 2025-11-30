@@ -68,7 +68,7 @@ export function PaycheckForecaster() {
       user_id: user.id,
       amount: netPay,
       date: values.payDate,
-      description: 'Estimated Paycheck',
+      description: `Wage: ${values.hours}h + ${values.overtime}h OT`,
       category: 'Income',
       type: 'income',
       status: 'estimated',
@@ -81,10 +81,28 @@ export function PaycheckForecaster() {
     }
   }
 
+  if (!settings?.hourly_rate) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Wage Tracker</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                    Please configure your hourly rate in Settings to use the wage tracker.
+                </p>
+                <Button asChild variant="outline" className="w-full">
+                    <a href="/dashboard/settings">Go to Settings</a>
+                </Button>
+            </CardContent>
+        </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Paycheck Forecaster</CardTitle>
+        <CardTitle>Wage Tracker</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -95,7 +113,7 @@ export function PaycheckForecaster() {
                 name="hours"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Hours</FormLabel>
+                    <FormLabel>Regular Hours</FormLabel>
                     <FormControl>
                         <Input type="number" {...field} />
                     </FormControl>
@@ -132,12 +150,15 @@ export function PaycheckForecaster() {
             />
             
             {estimatedPay !== null && (
-                <div className="p-4 bg-green-50 text-green-700 rounded-md">
-                    Estimated Net Pay: ${estimatedPay.toFixed(2)}
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-md">
+                    <div className="text-sm font-medium">Estimated Net Pay</div>
+                    <div className="text-2xl font-bold">
+                        ${estimatedPay.toFixed(2)}
+                    </div>
                 </div>
             )}
 
-            <Button type="submit" className="w-full">Save Estimate</Button>
+            <Button type="submit" className="w-full">Log Work Shift</Button>
           </form>
         </Form>
       </CardContent>

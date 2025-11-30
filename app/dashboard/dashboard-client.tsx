@@ -90,10 +90,22 @@ export function DashboardClient({ user }: { user: any }) {
         })
     }
 
-    return { safeToSpend, chartData }
+    // Calculate Income MTD
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const incomeMTD = transactions
+        .filter(t => 
+            t.type === 'income' && 
+            t.status === 'cleared' && 
+            new Date(t.date) >= startOfMonth && 
+            new Date(t.date) <= today
+        )
+        .reduce((acc, t) => acc + Number(t.amount), 0)
+
+    return { safeToSpend, chartData, incomeMTD }
   }
 
-  const { safeToSpend, chartData } = calculateMetrics()
+  const metrics = calculateMetrics()
+  const { safeToSpend, chartData } = metrics
 
   return (
     <div className="space-y-6">
@@ -129,6 +141,20 @@ export function DashboardClient({ user }: { user: any }) {
             </div>
             <p className="text-xs text-muted-foreground">
                 Balance - Bills due before next payday
+            </p>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+            <CardTitle>Income (MTD)</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(metrics.incomeMTD)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+                Total income for {format(new Date(), 'MMMM')}
             </p>
             </CardContent>
         </Card>

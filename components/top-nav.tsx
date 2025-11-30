@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Calendar, CreditCard, LogOut } from 'lucide-react'
+import { LayoutDashboard, Calendar, CreditCard, LogOut, Settings } from 'lucide-react'
 
 export function TopNav() {
   const pathname = usePathname()
@@ -33,6 +33,11 @@ export function TopNav() {
       title: 'Transactions',
       href: '/dashboard/transactions',
       icon: CreditCard,
+    },
+    {
+      title: 'Settings',
+      href: '/dashboard/settings',
+      icon: Settings,
     },
   ]
 
