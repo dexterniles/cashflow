@@ -77,7 +77,21 @@ export default function BudgetPage() {
     return acc
   }, {} as Record<string, number>)
 
-  const getProgressColor = (spent: number, limit: number) => {
+  // Calculate Totals
+  const totalBudget = categories.reduce((sum, cat) => sum + (cat.type === 'expense' ? (cat.budget_limit || 0) : 0), 0)
+  const totalSpent = transactions.reduce((sum, t) => {
+      // Only count expenses towards "Spent"
+      const category = categories.find(c => c.id === t.category_id)
+      if (category?.type === 'expense') {
+          return sum + t.amount
+      }
+      return sum
+  }, 0)
+  const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
+  const isOverBudget = totalSpent > totalBudget
+
+  const getProgressColor = (spent: number, limit: number, type: string) => {
+    if (type === 'income') return "bg-emerald-500"
     if (limit === 0) return "bg-slate-200"
     const percentage = (spent / limit) * 100
     if (percentage >= 100) return "bg-red-500"
@@ -96,6 +110,40 @@ export default function BudgetPage() {
         </div>
       </div>
 
+      {/* Month at a Glance Hero Card */}
+      <Card className="bg-gradient-to-br from-slate-900 to-slate-800 text-white border-none shadow-lg">
+        <CardContent className="p-6 space-y-4">
+            <div className="flex justify-between items-start">
+                <div>
+                    <p className="text-slate-400 font-medium text-sm">Total Spent</p>
+                    <h2 className="text-4xl font-bold mt-1">
+                        {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(totalSpent)}
+                    </h2>
+                    <p className="text-slate-300 mt-1">
+                        of {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(totalBudget)} budget
+                    </p>
+                </div>
+                <div className={cn(
+                    "px-3 py-1 rounded-full text-sm font-bold",
+                    isOverBudget ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
+                )}>
+                    {isOverBudget ? "Over Budget" : "On Track"}
+                </div>
+            </div>
+            <div className="space-y-2">
+                <div className="flex justify-between text-xs text-slate-400">
+                    <span>0%</span>
+                    <span>{Math.round(totalProgress)}%</span>
+                </div>
+                <Progress 
+                    value={Math.min(totalProgress, 100)} 
+                    className="h-3 bg-slate-700" 
+                    indicatorClassName={isOverBudget ? "bg-red-500" : "bg-emerald-500"}
+                />
+            </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6">
         {Object.entries(groupedCategories).map(([group, groupCategories]) => (
           <Card key={group}>
@@ -107,11 +155,6 @@ export default function BudgetPage() {
                 const spent = spendingByCategory[category.id] || 0
                 const limit = category.budget_limit || 0 // Default to 0 if null
                 const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0
-                
-                // Skip income categories for budget bars usually, but prompt asked for all.
-                // However, "Budget Bar" implies expenses.
-                // If type is income, maybe show differently? 
-                // For now, I'll treat everything as a budget item as requested.
                 
                 return (
                   <div key={category.id} className="space-y-2">
@@ -128,7 +171,7 @@ export default function BudgetPage() {
                     <Progress 
                         value={percentage} 
                         className="h-2" 
-                        indicatorClassName={getProgressColor(spent, limit)}
+                        indicatorClassName={getProgressColor(spent, limit, category.type)}
                     />
                   </div>
                 )
