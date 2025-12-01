@@ -41,6 +41,11 @@ export function TopNav() {
       icon: CreditCard,
     },
     {
+      title: 'Plan',
+      href: '/dashboard/budget',
+      icon: Receipt,
+    },
+    {
       title: 'Calendar',
       href: '/dashboard/calendar',
       icon: Calendar,
