@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useQuery } from '@tanstack/react-query'
+import Link from 'next/link'
 
 const formSchema = z.object({
   hours: z.coerce.number().min(0),
@@ -92,7 +93,7 @@ export function PaycheckForecaster() {
                     Please configure your hourly rate in Settings to use the wage tracker.
                 </p>
                 <Button asChild variant="outline" className="w-full">
-                    <a href="/dashboard/settings">Go to Settings</a>
+                    <Link href="/dashboard/settings">Go to Settings</Link>
                 </Button>
             </CardContent>
         </Card>
