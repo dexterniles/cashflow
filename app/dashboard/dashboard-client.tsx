@@ -101,33 +101,27 @@ export function DashboardClient({ user }: { user: any }) {
         )
         .reduce((acc, t) => acc + Number(t.amount), 0)
 
-    return { safeToSpend, chartData, incomeMTD }
+    // Calculate Daily Safe-to-Spend
+    let dailySafeToSpend = 0
+    if (nextPayday && safeToSpend > 0) {
+        const daysUntil = Math.max(1, Math.ceil((new Date(nextPayday).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
+        dailySafeToSpend = safeToSpend / daysUntil
+    }
+
+    return { safeToSpend, chartData, incomeMTD, nextPayday, dailySafeToSpend }
   }
 
   const metrics = calculateMetrics()
-  const { safeToSpend, chartData } = metrics
+  const { safeToSpend, chartData, nextPayday, dailySafeToSpend } = metrics
+
+  const daysUntilPayday = nextPayday 
+    ? Math.ceil((new Date(nextPayday).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    : 0
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <div className="flex gap-2">
-            <TransactionDialog 
-                trigger={
-                    <Button className="gap-2">
-                        <Plus className="h-4 w-4" /> Add Transaction
-                    </Button>
-                }
-            />
-            <TransactionDialog 
-                defaultType="expense"
-                trigger={
-                    <Button variant="outline" className="gap-2">
-                        <Receipt className="h-4 w-4" /> Add Bill
-                    </Button>
-                }
-            />
-        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -141,6 +135,34 @@ export function DashboardClient({ user }: { user: any }) {
             </div>
             <p className="text-xs text-muted-foreground">
                 Balance - Bills due before next payday
+            </p>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+            <CardTitle>Daily Budget</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(dailySafeToSpend || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+                Safe to spend per day until payday
+            </p>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+            <CardTitle>Next Payday</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <div className="text-2xl font-bold">
+                {daysUntilPayday > 0 ? `${daysUntilPayday} Days` : 'Today!'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+                {nextPayday ? format(new Date(nextPayday), 'MMM dd, yyyy') : 'No upcoming income'}
             </p>
             </CardContent>
         </Card>

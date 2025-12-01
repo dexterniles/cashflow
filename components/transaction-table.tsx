@@ -28,7 +28,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, ShoppingBag, Home, Car, Utensils, Zap, Smartphone, HeartPulse, Briefcase, GraduationCap, Plane, Music, Gift, HelpCircle } from 'lucide-react'
 import { format } from "date-fns";
 
 import { TransactionDialog } from "@/components/transaction-dialog";
@@ -47,6 +47,23 @@ interface TransactionTableProps {
   type?: "income" | "expense";
   status?: "cleared" | "pending" | "estimated";
   excludeStatus?: "cleared" | "pending" | "estimated"; // To exclude cleared for "Bills"
+}
+
+const getCategoryIcon = (category: string) => {
+  const c = category.toLowerCase()
+  if (c.includes('food') || c.includes('grocer') || c.includes('restaurant')) return <Utensils className="h-4 w-4 mr-2 text-orange-500" />
+  if (c.includes('rent') || c.includes('mortgage') || c.includes('home')) return <Home className="h-4 w-4 mr-2 text-blue-500" />
+  if (c.includes('car') || c.includes('gas') || c.includes('transport')) return <Car className="h-4 w-4 mr-2 text-slate-500" />
+  if (c.includes('shop') || c.includes('cloth')) return <ShoppingBag className="h-4 w-4 mr-2 text-pink-500" />
+  if (c.includes('util') || c.includes('electric') || c.includes('water')) return <Zap className="h-4 w-4 mr-2 text-yellow-500" />
+  if (c.includes('phone') || c.includes('internet')) return <Smartphone className="h-4 w-4 mr-2 text-purple-500" />
+  if (c.includes('health') || c.includes('doctor')) return <HeartPulse className="h-4 w-4 mr-2 text-red-500" />
+  if (c.includes('work') || c.includes('salary') || c.includes('income')) return <Briefcase className="h-4 w-4 mr-2 text-green-500" />
+  if (c.includes('school') || c.includes('edu')) return <GraduationCap className="h-4 w-4 mr-2 text-indigo-500" />
+  if (c.includes('travel') || c.includes('hotel')) return <Plane className="h-4 w-4 mr-2 text-sky-500" />
+  if (c.includes('entertain') || c.includes('music')) return <Music className="h-4 w-4 mr-2 text-violet-500" />
+  if (c.includes('gift') || c.includes('donation')) return <Gift className="h-4 w-4 mr-2 text-rose-500" />
+  return <HelpCircle className="h-4 w-4 mr-2 text-gray-400" />
 }
 
 export function TransactionTable({
@@ -121,6 +138,12 @@ export function TransactionTable({
     {
       accessorKey: "category",
       header: "Category",
+      cell: ({ row }) => (
+        <div className="flex items-center">
+            {getCategoryIcon(row.getValue('category'))}
+            {row.getValue('category')}
+        </div>
+      ),
     },
     {
       accessorKey: "amount",

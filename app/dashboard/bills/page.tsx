@@ -1,9 +1,7 @@
 'use client'
 
+import { BillGenerator } from '@/components/bill-generator'
 import { TransactionTable } from '@/components/transaction-table'
-import { TransactionDialog } from '@/components/transaction-dialog'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/utils/supabase/client'
@@ -15,9 +13,6 @@ export default function BillsPage() {
     queryKey: ['bills_due'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0]
-      
-      // Get next payday to calculate bills due before then? 
-      // Or just total pending bills? Let's do total pending bills for now as a simple metric.
       
       const { data, error } = await supabase
         .from('transactions')
@@ -51,6 +46,8 @@ export default function BillsPage() {
             </CardContent>
         </Card>
       </div>
+
+      <BillGenerator />
 
       <TransactionTable type="expense" excludeStatus="cleared" />
     </div>

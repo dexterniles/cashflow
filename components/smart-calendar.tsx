@@ -61,7 +61,29 @@ export function SmartCalendar() {
         allDay: true,
         type: t.type,
         status: t.status,
+        amount: Number(t.amount)
     })) || []
+
+    // Calculate running balance per day
+    const getRunningBalance = (date: Date) => {
+        if (!transactions) return 0
+        const dateStr = format(date, 'yyyy-MM-dd')
+        // Filter transactions up to this date
+        // Note: This is a simple client-side calculation. For large datasets, this should be optimized or server-side.
+        // We assume "transactions" contains all history or enough history.
+        // Ideally we start with a known balance at start of month, but here we sum everything.
+        // Let's sum all "cleared" transactions + "pending" transactions up to this date.
+        
+        return transactions.reduce((acc, t) => {
+            const tDate = new Date(t.date)
+            if (tDate <= date) {
+                const amount = Number(t.amount)
+                if (t.type === 'income') return acc + amount
+                return acc - amount
+            }
+            return acc
+        }, 0)
+    }
 
     const onEventDrop = ({ event, start }: { event: CalendarEvent, start: Date }) => {
         if (event.type === 'expense') { 
@@ -74,28 +96,44 @@ export function SmartCalendar() {
 
     const eventStyleGetter = (event: CalendarEvent) => {
         let backgroundColor = '#3174ad'
-        if (event.type === 'income') backgroundColor = 'green'
-        if (event.type === 'expense') backgroundColor = 'red' 
+        if (event.type === 'income') backgroundColor = '#10b981' // emerald-500
+        if (event.type === 'expense') backgroundColor = '#ef4444' // red-500
         
         return {
             style: {
                 backgroundColor,
-                borderRadius: '5px',
-                opacity: 0.8,
+                borderRadius: '4px',
+                opacity: 0.9,
                 color: 'white',
                 border: '0px',
-                display: 'block'
+                display: 'block',
+                fontSize: '0.8rem',
+                padding: '2px 4px'
             }
         }
     }
 
+    const DateCellWrapper = ({ children, value }: any) => {
+        const balance = getRunningBalance(value)
+        const isNegative = balance < 0
+        
+        return (
+            <div className="h-full flex flex-col relative group">
+                {children}
+                <div className={`absolute bottom-1 right-1 text-xs font-semibold ${isNegative ? 'text-red-500' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(balance)}
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <Card>
+        <Card className="h-full">
             <CardHeader>
                 <CardTitle>Smart Calendar</CardTitle>
             </CardHeader>
             <CardContent>
-                <div style={{ height: 500 }}>
+                <div style={{ height: 600 }}>
                     <DnDCalendar
                         localizer={localizer}
                         events={events}
@@ -105,6 +143,10 @@ export function SmartCalendar() {
                         resizable={false}
                         style={{ height: '100%' }}
                         eventPropGetter={eventStyleGetter}
+                        components={{
+                            dateCellWrapper: DateCellWrapper
+                        }}
+                        views={['month']}
                     />
                 </div>
             </CardContent>
