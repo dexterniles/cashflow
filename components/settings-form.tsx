@@ -23,6 +23,7 @@ const settingsSchema = z.object({
   hourly_rate: z.coerce.number().min(0, "Hourly rate must be positive"),
   tax_rate_percent: z.coerce.number().min(0).max(100, "Tax rate must be between 0 and 100"),
   fixed_deductions: z.coerce.number().min(0, "Deductions must be positive"),
+  custom_payday: z.coerce.number().min(1).max(31).optional().or(z.literal(0)),
 })
 
 type SettingsFormValues = z.infer<typeof settingsSchema>
@@ -37,6 +38,7 @@ export function SettingsForm({ user }: { user: any }) {
       hourly_rate: 0,
       tax_rate_percent: 0,
       fixed_deductions: 0,
+      custom_payday: 0,
     },
   })
 
@@ -53,6 +55,7 @@ export function SettingsForm({ user }: { user: any }) {
           hourly_rate: data.hourly_rate || 0,
           tax_rate_percent: data.tax_rate_percent || 0,
           fixed_deductions: data.fixed_deductions || 0,
+          custom_payday: data.custom_payday || 0,
         })
       }
       setLoading(false)
@@ -66,6 +69,7 @@ export function SettingsForm({ user }: { user: any }) {
       .upsert({
         user_id: user.id,
         ...data,
+        custom_payday: data.custom_payday === 0 ? null : data.custom_payday,
       })
 
     if (error) {
@@ -88,22 +92,43 @@ export function SettingsForm({ user }: { user: any }) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="hourly_rate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Hourly Rate ($)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Your gross hourly wage before taxes.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                control={form.control}
+                name="hourly_rate"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Hourly Rate ($)</FormLabel>
+                    <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                        Your gross hourly wage before taxes.
+                    </FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="custom_payday"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Custom Payday</FormLabel>
+                    <FormControl>
+                        <Input type="number" min={1} max={31} placeholder="e.g. 15" {...field} 
+                        onChange={e => field.onChange(e.target.value === '' ? 0 : parseInt(e.target.value))}
+                        value={field.value === 0 ? '' : field.value}
+                        />
+                    </FormControl>
+                    <FormDescription>
+                        Day of the month you usually get paid (1-31).
+                    </FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
             <FormField
               control={form.control}
               name="tax_rate_percent"
