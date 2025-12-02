@@ -26,16 +26,6 @@ export function TopNav() {
       icon: LayoutDashboard,
     },
     {
-      title: 'Income',
-      href: '/dashboard/income',
-      icon: CreditCard,
-    },
-    {
-      title: 'Bills',
-      href: '/dashboard/bills',
-      icon: Receipt,
-    },
-    {
       title: 'Transactions',
       href: '/dashboard/transactions',
       icon: CreditCard,

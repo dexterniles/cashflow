@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Plus, Trash, RefreshCw, Calendar as CalendarIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -25,7 +25,7 @@ type BillTemplate = {
   description: string
   amount: number
   dayOfMonth: number
-  category: string
+  category_id: string
 }
 
 export function BillGenerator() {
@@ -34,6 +34,20 @@ export function BillGenerator() {
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)) // YYYY-MM
   const supabase = createClient()
   const queryClient = useQueryClient()
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('type', 'expense')
+        .order('name')
+      
+      if (error) throw error
+      return data
+    }
+  })
 
   // Load templates from localStorage on mount
   useEffect(() => {
@@ -54,7 +68,7 @@ export function BillGenerator() {
       description: 'New Bill',
       amount: 0,
       dayOfMonth: 1,
-      category: 'Bills'
+      category_id: categories?.[0]?.id || ''
     }
     setTemplates([...templates, newTemplate])
   }
@@ -78,13 +92,15 @@ export function BillGenerator() {
     const transactions = templates.map(t => {
       // Handle days that don't exist in the month (e.g. 31st in Feb)
       const date = new Date(year, month - 1, Math.min(t.dayOfMonth, new Date(year, month, 0).getDate()))
+      const category = categories?.find(c => c.id === t.category_id)
       
       return {
         user_id: user.id,
         amount: t.amount,
         date: date.toISOString().split('T')[0],
         description: t.description,
-        category: t.category,
+        category: category?.name || 'Bills',
+        category_id: t.category_id,
         type: 'expense',
         status: 'pending', // Default to pending for generated bills
       }
@@ -175,10 +191,21 @@ export function BillGenerator() {
                 </div>
                 <div className="space-y-1">
                     <Label className="text-xs">Category</Label>
-                    <Input 
-                        value={template.category} 
-                        onChange={(e) => updateTemplate(template.id, 'category', e.target.value)}
-                    />
+                    <Select 
+                        value={template.category_id} 
+                        onValueChange={(value) => updateTemplate(template.id, 'category_id', value)}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {categories?.map((category: any) => (
+                                <SelectItem key={category.id} value={category.id}>
+                                    {category.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
             <Button variant="ghost" size="icon" onClick={() => removeTemplate(template.id)} className="mb-0.5">

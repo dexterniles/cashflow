@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const formSchema = z.object({
   hours: z.coerce.number().min(0),
@@ -18,6 +19,7 @@ const formSchema = z.object({
   payDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid date",
   }),
+  category_id: z.string().min(1, "Category is required"),
 })
 
 export function PaycheckForecaster() {
@@ -34,14 +36,36 @@ export function PaycheckForecaster() {
     }
   })
 
+  const { data: categories } = useQuery({
+    queryKey: ['categories', 'income'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('type', 'income')
+        .order('name')
+      
+      if (error) throw error
+      return data
+    }
+  })
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
       hours: 40,
       overtime: 0,
       payDate: new Date().toISOString().split('T')[0],
+      category_id: '',
     },
   })
+
+  // Set default category when loaded
+  useEffect(() => {
+    if (categories && categories.length > 0 && !form.getValues('category_id')) {
+        form.setValue('category_id', categories[0].id)
+    }
+  }, [categories, form])
 
   const calculatePay = (values: z.infer<typeof formSchema>) => {
     if (!settings) return 0
@@ -65,12 +89,15 @@ export function PaycheckForecaster() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    const category = categories?.find(c => c.id === values.category_id)
+
     const { error } = await supabase.from('transactions').insert({
       user_id: user.id,
       amount: netPay,
       date: values.payDate,
       description: `Wage: ${values.hours}h + ${values.overtime}h OT`,
-      category: 'Income',
+      category: category?.name || 'Income',
+      category_id: values.category_id,
       type: 'income',
       status: 'estimated',
     })
@@ -136,6 +163,32 @@ export function PaycheckForecaster() {
                 )}
                 />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="category_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select income category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories?.map((category: any) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="payDate"
